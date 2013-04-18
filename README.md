@@ -8,6 +8,11 @@ Check size (tested on Mac OS):
 	cat tetris.coffee tetris.html | grep -v -E "^(\t|\s)*#" | wc -c
 
 
+Screenshot
+==========
+![ScreenShot](https://raw.github.com/henrik-muehe/tetris/master/screenshot.png)
+
+
 LICENSE
 =======
 This program is free software: you can redistribute it and/or modify
