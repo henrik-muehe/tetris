@@ -185,7 +185,7 @@ class Game
 	# Game over handler
 	gameover: =>
 		@toggle()
-		txt=G.text(0.5*width*size,2*size,"game over\n⏎ to start")
+		txt=G.text(0.5*width*size,2*size,@score+"\ngame over\n⏎ to start")
 		txt.attr({"font-size":"30pt"})
 		@init()
 	# Redraw game board and check for fully filled rows which will be cleaned and added to the high score

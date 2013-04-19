@@ -441,7 +441,7 @@
 
     __defineProperty(Game,  "gameover", function() {
       this.toggle();
-      txt = G.text(0.5 * width * size, 2 * size, "game over\n⏎ to start");
+      txt = G.text(0.5 * width * size, 2 * size, this.score + "\ngame over\n⏎ to start");
       txt.attr({
         "font-size": "30pt"
       });
