@@ -13,14 +13,15 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-$(window).focus()
+W=$(window)
+W.focus()
 width=10
 height=15
-size=30
-$("#g").css("width",size*width)
-$("#g").css("height",size*height)
-$("#n").css("width",size*4)
-$("#n").css("height",size*4)
+sz=30
+$("#g").css("width",sz*width)
+$("#g").css("height",sz*height)
+$("#n").css("width",sz*4)
+$("#n").css("height",sz*4)
 R=Raphael
 M=Math
 G=R("g")
@@ -33,8 +34,8 @@ class P
 	constructor: ->
 		@shape=@bshape
 		@blocks=[]
-		@xbase=0
-		@ybase=0
+		@xb=0
+		@yb=0
 	# Rotate this piece right, changing its shape
 	rotR: =>
 		n=[]
@@ -47,29 +48,28 @@ class P
 		this
 	# Draw this piece onto a raphael canvas after a bounds check
 	draw: (c)=>
-		@xbase=M.max(0,@xbase)
-		@xbase=M.min(width-@shape[0].length,@xbase)
+		@xb=M.max(0,@xb)
+		@xb=M.min(width-@shape[0].length,@xb)
 		b.remove() for b in @blocks
 		for y,row of @shape
 			for x,col of row
 				if col==1
 					x=1.0*x
 					y=1.0*y
-					b=c.rect((@xbase+x)*size,(+@ybase+y)*size,size,size)
-					b.attr("fill", @color)
-					b.attr("stroke", "#000")
+					b=c.rect((@xb+x)*sz,(+@yb+y)*sz,sz,sz)
+					b.attr({"fill":@color,"stroke":"#000"})
 					@blocks.push b
 	# Move piece to the left
-	l: => @xbase-=1; this
+	l: => @xb-=1; this
 	# Move piece to the right
-	r: => @xbase+=1; this
+	r: => @xb+=1; this
 	# Move piece down one step
-	down: => @ybase+=1; this
+	down: => @yb+=1; this
 	# Create a copy of this piece
 	clone: =>
-		p=new this.constructor()
-		p.xbase=@xbase;
-		p.ybase=@ybase
+		p=new @constructor()
+		p.xb=@xb;
+		p.yb=@yb
 		p.shape=@shape
 		p
 	# Create an array of coordinates occupied by this piece
@@ -78,7 +78,7 @@ class P
 		for y,row of @shape
 			for x,col of row
 				if col==1
-					ba.push [x*1.0+@xbase,y*1.0+@ybase]
+					ba.push [x*1.0+@xb,y*1.0+@yb]
 		ba
 	# Remove all blocks of this piece from their canvas
 	remove: => b.remove() for b in @blocks
@@ -161,14 +161,14 @@ class Game
 		# We just tick as long as the piece has not been refreshed
 	drop: =>
 		if @i&&@i!=null
-			@tick();@tick() while @p.ybase!=0
+			@tick();@tick() while @p.yb!=0
 	# Move current piece left if possible
-	l: =>
+	l:=>
 		if @check(@p.clone().l())
 			@p.l()
 			@p.draw(G)
 	# Move current piece right if possible
-	r: =>
+	r:=>
 		if @check(@p.clone().r())
 			@p.r()
 			@p.draw(G)
@@ -185,8 +185,8 @@ class Game
 	# Game over handler
 	gameover: =>
 		@toggle()
-		txt=G.text(0.5*width*size,2*size,@score+"\ngame over\n⏎ to start")
-		txt.attr({"font-size":"30pt"})
+		txt=G.text(0.5*width*sz,2*sz,@score+"\ngame over\n⏎ to start")
+		txt.attr({"font-sz":"30pt"})
 		@init()
 	# Redraw game board and check for fully filled rows which will be cleaned and added to the high score
 	draw: =>
@@ -210,7 +210,7 @@ class Game
 		for y,row of @m
 			for x,col of row
 				if col!=null
-					b=G.rect((x*1.0)*size,(y*1.0)*size,size,size)
+					b=G.rect((x*1.0)*sz,(y*1.0)*sz,sz,sz)
 					b.attr("fill",col)
 					b.attr("stroke","#000")
 					@blocks.push b
@@ -234,6 +234,21 @@ k[39]=i.r
 k[38]=i.rotR
 k[40]=i.rotL
 k[32]=i.drop
-$(document).keydown (e) ->
-	if(k[e.which])
-		k[e.which]()
+W.keydown (e) ->
+	f=k[e.which]
+	if(f)
+		f()
+
+
+# Allow basic movements with a touch screen device
+t=[0,0]
+W.bind "deviceorientation",->t=[event.beta,event.gamma]
+setInterval ->
+	if (t[1]<-16)
+		i.l()
+	if (t[1]>16)
+		i.r()
+	if (t[0]>75)
+		i.drop()
+,400
+W.bind "touchstart",->i.rotR()
