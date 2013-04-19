@@ -203,7 +203,7 @@ class Game
 				@m[0].push null for i in [1..width]
 		# High score computation, score is exponential w.r.t. the number of lines killed in one step
 		@score+=M.pow(2,rowsKilled-1)*1000 if rowsKilled>0
-		$("#score").html(@score)
+		$("#s").html(@score)
 		# Redraw game board
 		for y,row of @m
 			for x,col of row

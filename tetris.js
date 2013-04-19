@@ -476,7 +476,7 @@
       if (rowsKilled > 0) {
         this.score += M.pow(2, rowsKilled - 1) * 1000;
       }
-      $("#score").html(this.score);
+      $("#s").html(this.score);
       _ref2 = this.m;
       _results = [];
       for (y in _ref2) {
