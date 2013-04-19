@@ -388,12 +388,14 @@
 
     __defineProperty(Game,  "drop", function() {
       var _results;
-      this.tick();
-      _results = [];
-      while (this.p.ybase !== 0) {
-        _results.push(this.tick());
+      if (this.i && this.i !== null) {
+        this.tick();
+        _results = [];
+        while (this.p.ybase !== 0) {
+          _results.push(this.tick());
+        }
+        return _results;
       }
-      return _results;
     });
 
     __defineProperty(Game,  "l", function() {

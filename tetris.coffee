@@ -159,7 +159,9 @@ class Game
 		@next.draw(N)
 	# Drops a piece down until it is persisted
 		# We just tick as long as the piece has not been refreshed
-	drop: => @tick();@tick() while @p.ybase!=0
+	drop: =>
+		if @i&&@i!=null
+			@tick();@tick() while @p.ybase!=0
 	# Move current piece left if possible
 	l: =>
 		if @check(@p.clone().l())
