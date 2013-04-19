@@ -13,19 +13,22 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+$(window).focus()
 width=10
 height=15
 size=30
-$("#game").css("width",size*width)
-$("#game").css("height",size*height)
-$("#next").css("width",size*4)
-$("#next").css("height",size*4)
+$("#g").css("width",size*width)
+$("#g").css("height",size*height)
+$("#n").css("width",size*4)
+$("#n").css("height",size*4)
 R=Raphael
-c=R("game","100%","100%")
-next=R("next","100%","100%")
+M=Math
+G=R("g")
+N=R("n")
+txt=null
 
 # A tetris piece superclass
-class Piece
+class P
 	# initialize all values
 	constructor: ->
 		@shape=@bshape
@@ -42,14 +45,10 @@ class Piece
 			n.push r
 		@shape=n
 		this
-	# Rotate piece left, implemented using right rotation
-	rotL: =>
-		@rotR() for x in [0..2]
-		this
 	# Draw this piece onto a raphael canvas after a bounds check
 	draw: (c)=>
-		@xbase=Math.max(0,@xbase)
-		@xbase=Math.min(width-@shape[0].length,@xbase)
+		@xbase=M.max(0,@xbase)
+		@xbase=M.min(width-@shape[0].length,@xbase)
 		b.remove() for b in @blocks
 		for y,row of @shape
 			for x,col of row
@@ -61,17 +60,11 @@ class Piece
 					b.attr("stroke", "#000")
 					@blocks.push b
 	# Move piece to the left
-	l: =>
-		@xbase-=1
-		this
+	l: => @xbase-=1; this
 	# Move piece to the right
-	r: =>
-		@xbase+=1
-		this
+	r: => @xbase+=1; this
 	# Move piece down one step
-	down: =>
-		@ybase+=1
-		this
+	down: => @ybase+=1; this
 	# Create a copy of this piece
 	clone: =>
 		p=new this.constructor()
@@ -88,29 +81,28 @@ class Piece
 					ba.push [x*1.0+@xbase,y*1.0+@ybase]
 		ba
 	# Remove all blocks of this piece from their canvas
-	remove: =>
-		b.remove() for b in @blocks
+	remove: => b.remove() for b in @blocks
 
 # Create subclasses for all 7 tetris pieces
-class PI extends Piece
+class PI extends P
 	bshape: [[1,1,1,1]]
 	color: 'cyan'
-class PJ extends Piece
+class PJ extends P
 	bshape: [[1,1,1],[0,0,1]]
 	color: 'blue'
-class PL extends Piece
+class PL extends P
 	bshape: [[1,1,1],[1,0,0]]
 	color: 'orange'
-class PO extends Piece
+class PO extends P
 	bshape: [[1,1],[1,1]]
 	color: 'yellow'
-class PS extends Piece
+class PS extends P
 	bshape: [[0,1,1],[1,1,0]]
 	color: 'green'
-class PZ extends Piece
+class PZ extends P
 	bshape: [[1,1,0],[0,1,1]]
 	color: 'purple'
-class PT extends Piece
+class PT extends P
 	bshape: [[0,1,0],[1,1,1]]
 	color: 'red'
 
@@ -123,78 +115,76 @@ class Game
 	constructor: ->
 		@init()
 		@tick()
-		setInterval(@tick,1000)
+		@toggle()
 	# Resets the game
 	init: =>
 		b.remove() for b in @blocks if @blocks
 		@score=0
 		@blocks=[]
-		@piece.remove() if @piece
-		@piece=null
+		@p.remove() if @p
+		@p=null
 		@next.remove() if @next
 		@next=null
-		@matrix=[]
-		for row in [0..height-1]
-			@matrix[row]=[]
+		@m=[]
+		for r in [0..height-1]
+			@m[r]=[]
 			for col in [0..width-1]
-				@matrix[row][col]=null
+				@m[r][col]=null
 		@tick()
 		@draw()
 	# Run a collision check for piece p
 	check: (p)=>
 		for b in p.bounds()
 			return false if b[1] >= height
-			return false if @matrix[b[1]][b[0]]!=null
+			return false if @m[b[1]][b[0]]!=null
 		true
 	# One game tick, moves current piece down, creates a fresh piece, triggers board redraw and checks game over condition
 	tick: =>
 		# drop active piece one step
-		if @piece!=null
-			if @check(@piece.clone().down())
-				@piece.down()
+		if @p!=null
+			if @check(@p.clone().down())
+				@p.down()
 			else
-				@persist(@piece);
-				@piece.remove()
+				@persist(@p);
+				@p.remove()
 				@draw()
-				@piece=null
-		if @piece==null
+				@p=null
+		if @p==null
 			# add piece if there is no active one
-			@piece=@next
-			return @gameover() if @piece!=null and not @check(@piece)
-			@next=new pieces[Math.floor(Math.random()*pieces.length)]()
+			@p=@next
+			return @gameover() if @p!=null and not @check(@p)
+			@next=new pieces[M.floor(M.random()*pieces.length)]()
 		# refresh game c
-		@piece.draw(c) if @piece
-		@next.draw(next)
+		@p.draw(G) if @p
+		@next.draw(N)
 	# Drops a piece down until it is persisted
-	drop: =>
 		# We just tick as long as the piece has not been refreshed
-		@tick();@tick() while @piece.ybase!=0
+	drop: => @tick();@tick() while @p.ybase!=0
 	# Move current piece left if possible
 	l: =>
-		if @check(@piece.clone().l())
-			@piece.l()
-			@piece.draw(c)
+		if @check(@p.clone().l())
+			@p.l()
+			@p.draw(G)
 	# Move current piece right if possible
 	r: =>
-		if @check(@piece.clone().r())
-			@piece.r()
-			@piece.draw(c)
-	# Rotate current piece left if possible
-	rotL: =>
-		if @check(@piece.clone().rotL())
-			@piece.rotL()
-			@piece.draw(c)
+		if @check(@p.clone().r())
+			@p.r()
+			@p.draw(G)
 	# Rotate current piece right if possible
 	rotR: =>
-		if @check(@piece.clone().rotR())
-			@piece.rotR()
-			@piece.draw(c)
+		if @check(@p.clone().rotR())
+			@p.rotR()
+			@p.draw(G)
+	# Rotate current piece left if possible
+	rotL: => @rotR() for [1..3]
 	# Persist piece into the game state. This essentially makes it a static block instead of a moving piece
 	persist: (p)=>
-		@matrix[coord[1]][coord[0]]=p.color for coord in p.bounds()
+		@m[coord[1]][coord[0]]=p.color for coord in p.bounds()
 	# Game over handler
 	gameover: =>
-		alert "game over"
+		@toggle()
+		txt=G.text(0.5*width*size,2*size,"game over\n⏎ to start")
+		txt.attr({"font-size":"30pt"})
 		@init()
 	# Redraw game board and check for fully filled rows which will be cleaned and added to the high score
 	draw: =>
@@ -202,33 +192,46 @@ class Game
 		b.remove() for b in @blocks
 		# Check how many rows the player erased
 		rowsKilled=0
-		for y,row of @matrix
+		for y,row of @m
 			full=true
 			for x,col of row
 				full=false if col==null
 			if full
 				rowsKilled+=1
-				@matrix.splice(y,1)
-				@matrix.unshift []
-				@matrix[0].push null for i in [1..width]
+				@m.splice(y,1)
+				@m.unshift []
+				@m[0].push null for i in [1..width]
 		# High score computation, score is exponential w.r.t. the number of lines killed in one step
-		@score+=Math.pow(2,rowsKilled-1)*1000 if rowsKilled>0
+		@score+=M.pow(2,rowsKilled-1)*1000 if rowsKilled>0
 		$("#score").html(@score)
 		# Redraw game board
-		for y,row of @matrix
+		for y,row of @m
 			for x,col of row
-				continue if col==null
-				b=c.rect((x*1.0)*size,(y*1.0)*size,size,size)
-				b.attr("fill",col)
-				b.attr("stroke","#000")
-				@blocks.push b
+				if col!=null
+					b=G.rect((x*1.0)*size,(y*1.0)*size,size,size)
+					b.attr("fill",col)
+					b.attr("stroke","#000")
+					@blocks.push b
+	# toggles pause
+	toggle: =>
+		if @i&&@i!=null
+			clearInterval(@i)
+			@i=null
+		else
+			@i=setInterval(@tick,1000)
+		if txt!=null
+			txt.remove()
+			txt=null
 
 # Instance of the game and key handlers
-g=new Game()
+i=new Game()
+k={}
+k[13]=i.toggle
+k[37]=i.l
+k[39]=i.r
+k[38]=i.rotR
+k[40]=i.rotL
+k[32]=i.drop
 $(document).keydown (e) ->
-	switch e.which
-		when 37 then g.l()
-		when 39 then g.r()
-		when 38 then g.rotR()
-		when 40 then g.rotL()
-		when 32 then g.drop()
+	if(k[e.which])
+		k[e.which]()

@@ -5,12 +5,12 @@ Coding challenge implementation of tetris, about 3 hours of recreational coding.
 
 Check size (tested on Mac OS):
 
-	cat tetris.coffee tetris.html | grep -v -E "^(\t|\s)*#" | wc -c
+	(grep -v -E "^(\t|\s)*#" tetris.coffee; cat tetris.html) | wc -c
 
 Try
 ---
 
-You have to **click on the tetris canvas** due to jsfiddles framing. Try it at http://jsfiddle.net/henrikm85/b8cH4/embedded/result/
+Try it at http://jsfiddle.net/henrikm85/b8cH4/embedded/result/
 
 
 Screenshot
