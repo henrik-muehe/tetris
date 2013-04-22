@@ -16,14 +16,8 @@
 width=10
 height=15
 sz=30
-$("#g").css("width",sz*width)
-$("#g").css("height",sz*height)
-$("#n").css("width",sz*4)
-$("#n").css("height",sz*4)
-R=Raphael
+R=Raphael if Raphael?
 M=Math
-G=R("g")
-N=R("n")
 txt=null
 
 # A tetris piece superclass
@@ -110,12 +104,19 @@ pieces=[PI,PT,PO,PJ,PL,PS,PZ]
 # Actual game class implementing the big game board
 class Game
 	# Constructs a new tetris game
-	constructor: ->
+	constructor: (@G,@N,@S)->
+		if @G
+			@G=R(@G.attr("id"))
+			@N=R(@N.attr("id"))
 		@init()
-		@tick()
-		@toggle()
+		if @G
+			@tick()
+			@toggle()
 	# Resets the game
 	init: =>
+		@n=-1
+		s=Math.random()
+		@L=[s]
 		b.remove() for b in @blocks if @blocks
 		@score=0
 		@blocks=[]
@@ -128,74 +129,83 @@ class Game
 			@m[r]=[]
 			for col in [0..width-1]
 				@m[r][col]=null
-		@tick()
-		@draw()
+		if @G
+			@Q=new Nonsense(s)
+			@tick()
+			@draw()
+			@gS()
 	# Run a collision check for piece p
 	check: (p)=>
 		for b in p.bounds()
-			return false if b[1] >= height
-			return false if @m[b[1]][b[0]]!=null
+			return false if b[1]>=height
+			return false if @m[b[1]][b[0]]?
 		true
 	# One game tick, moves current piece down, creates a fresh piece, triggers board redraw and checks game over condition
 	tick: =>
 		# drop active piece one step
-		if @p!=null
+		if @p?
 			if @check(@p.clone().down())
 				@p.down()
 			else
-				@persist(@p);
+				@persist(@p.bounds(),@p.color);
+				@L.push [@p.xb,@p.yb]
 				@p.remove()
 				@draw()
 				@p=null
-		if @p==null
+		if !@p?
 			# add piece if there is no active one
 			@p=@next
-			return @gameover() if @p!=null and not @check(@p)
-			@next=new pieces[M.floor(M.random()*pieces.length)]()
+			if @p?
+				return @gameover() if !@check(@p)
+				@L.push @n
+			@n=@Q.uint32()%pieces.length;
+			@next=new pieces[@n]()
 		# refresh game c
-		@p.draw(G) if @p
-		@next.draw(N)
+		@p.draw(@G) if @p?
+		@next.draw(@N)
 	# Drops a piece down until it is persisted
-		# We just tick as long as the piece has not been refreshed
+	# We just tick as long as the piece has not been refreshed
 	drop: =>
-		if @i&&@i!=null
+		if @i?
 			@tick();@tick() while @p.yb!=0
 	# Move current piece left if possible
 	l:=>
 		if @check(@p.clone().l())
 			@p.l()
-			@p.draw(G)
+			@p.draw(@G)
 	# Move current piece right if possible
 	r:=>
 		if @check(@p.clone().r())
 			@p.r()
-			@p.draw(G)
+			@p.draw(@G)
 	# Rotate current piece right if possible
 	rotR: =>
 		if @check(@p.clone().rotR())
 			@p.rotR()
-			@p.draw(G)
+			@p.draw(@G)
+			@L.push 'R'
 	# Rotate current piece left if possible
 	rotL: => @rotR() for [1..3]
 	# Persist piece into the game state. This essentially makes it a static block instead of a moving piece
-	persist: (p)=>
-		@m[coord[1]][coord[0]]=p.color for coord in p.bounds()
+	persist: (b,c)=>
+		@m[coord[1]][coord[0]]=c for coord in b
+	# Load highscore
+	gS:=>$.get '/H',(d)-> $("#h").text(d)
 	# Game over handler
 	gameover: =>
 		@toggle()
-		txt=G.text(0.5*width*sz,2*sz,@score+"\ngame over\nhit ⏎")
-		txt.attr({"font-size":"30pt"})
+		$.post('/h',{n:$.trim(prompt("Name?")),d:JSON.stringify(@L)}).done => @gS()
+		txt=@G.text(0.5*width*sz,2*sz,@score+"\ngame over\nhit ⏎")
+		txt.attr({"font-size":"30pt","font-family":"Courier"}) #STYLE_ONLY
 		@init()
 	# Redraw game board and check for fully filled rows which will be cleaned and added to the high score
 	draw: =>
-		# Remove all blocks
-		b.remove() for b in @blocks
 		# Check how many rows the player erased
 		rowsKilled=0
 		for y,row of @m
 			full=true
 			for x,col of row
-				full=false if col==null
+				full=false if !col?
 			if full
 				rowsKilled+=1
 				@m.splice(y,1)
@@ -203,24 +213,46 @@ class Game
 				@m[0].push null for i in [1..width]
 		# High score computation, score is exponential w.r.t. the number of lines killed in one step
 		@score+=M.pow(2,rowsKilled-1)*1000 if rowsKilled>0
-		$("#s").html(@score)
-		# Redraw game board
-		for y,row of @m
-			for x,col of row
-				if col!=null
-					b=G.rect((x*1.0)*sz,(y*1.0)*sz,sz,sz)
-					b.attr("fill",col)
-					b.attr("stroke","#000")
-					@blocks.push b
+		if @G
+			# Remove all blocks
+			b.remove() for b in @blocks
+			# Redraw game board
+			@S.html(@score)
+			for y,row of @m
+				for x,col of row
+					if col?
+						b=@G.rect((x*1.0)*sz,(y*1.0)*sz,sz,sz)
+						b.attr("fill",col)
+						b.attr("stroke","#000") #STYLE_ONLY
+						@blocks.push b
 	# toggles pause
 	toggle: =>
-		if @i&&@i!=null
+		if @i?
 			clearInterval(@i)
 			@i=null
 		else
 			@i=setInterval(@tick,1000)
-		if txt!=null
+		if txt?
 			txt.remove()
 			txt=null
+	# play a history and compute its score
+	run: (h) =>
+		p=0
+		a=JSON.parse(h["d"])
+		n=require('./js/n.js')
+		@Q=new n(a.shift())
+		for i in a
+			if i[1]?
+				p.xb=i[0]
+				p.yb=i[1]
+				@persist(p.bounds(),p.color)
+				@draw()
+			else if i=="R"
+				p.rotR()
+			else
+				i=@Q.uint32()%pieces.length;
+				p=new pieces[i]()
+		@score
 
-this.Game=Game
+r=exports ? this
+r.Game=Game

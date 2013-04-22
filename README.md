@@ -5,7 +5,7 @@ Coding challenge implementation of tetris, about 3 hours of recreational coding.
 
 Check size (tested on Mac OS):
 
-	(cat *.coffee | ./compact.sh ; htmlcompressor --remove-intertag-spaces --remove-quotes tetris.html) | wc -c
+	(cat *.coffee | ./compact.sh ; cat *.jade | grep -v h1 | grep -v body | grep -v float | grep -v script ) | wc -c
 
 Try
 ---
