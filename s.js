@@ -24,8 +24,8 @@
     }
     g = new t.Game();
     s = g.run(b);
-    fs.appendFile('z', s + "\t" + b.n + "\n");
-    ex("sort -nr z>H");
+    fs.appendFile('z.txt', s + "\t" + b.n + "\n");
+    ex("sort -nr z.txt|head -n25>H");
     return res.send('');
   });
 
