@@ -1,16 +1,12 @@
 Tetris
 ======
 
-Coding challenge implementation of tetris, about 3 hours of recreational coding. Sadly, some identifiers are a little mangled since the code size restriction was 4096 bytes.
-
-Check size (tested on Mac OS):
-
-	(cat *.coffee | ./compact.sh ; cat tetris.jade | grep -v h1 | grep -v body | grep -v float | grep -v script | grep -v include ) | wc -c
+Origianlly, a submission to the coding challenge to reimplement tetris, about 3 hours of recreational coding. Now demangled to add some features and fix bugs.
 
 Try
 ---
 
-Try it at http://jsfiddle.net/henrikm85/b8cH4/embedded/result/
+Try it at http://tetris.muehe.org
 
 
 Screenshot
