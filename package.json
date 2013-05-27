@@ -4,7 +4,8 @@
   "version": "0.0.1-12",
   "private": true,
   "dependencies": {
-    "express": "3.x"
+    "express": "3.x",
+    "jade": "*"
   },
   "subdomain": "henrikm85-tetris",
   "scripts": {
