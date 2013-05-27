@@ -29,7 +29,7 @@ class P
 		@xb=0
 		@yb=0
 	# Rotate this piece right, changing its shape
-	rotR: =>
+	rotateRight: =>
 		n=[]
 		for row in [0..@shape[0].length-1]
 			r=[]
@@ -52,9 +52,9 @@ class P
 					b.attr({"fill":@color,"stroke":"#000"})
 					@blocks.push b
 	# Move piece to the left
-	l: => @xb-=1; this
+	moveLeft: => @xb-=1; this
 	# Move piece to the right
-	r: => @xb+=1; this
+	moveRight: => @xb+=1; this
 	# Move piece down one step
 	down: => @yb+=1; this
 	# Create a copy of this piece
@@ -170,32 +170,35 @@ class Game
 		if @i?
 			@tick();@tick() while @p.yb!=0
 	# Move current piece left if possible
-	l:=>
-		if @check(@p.clone().l())
-			@p.l()
+	moveLeft:=>
+		if @check(@p.clone().moveLeft())
+			@p.moveLeft()
 			@p.draw(@G)
 	# Move current piece right if possible
-	r:=>
-		if @check(@p.clone().r())
-			@p.r()
+	moveRight:=>
+		if @check(@p.clone().moveRight())
+			@p.moveRight()
 			@p.draw(@G)
 	# Rotate current piece right if possible
-	rotR: =>
-		if @check(@p.clone().rotR())
-			@p.rotR()
+	rotateRight: =>
+		if @check(@p.clone().rotateRight())
+			@p.rotateRight()
 			@p.draw(@G)
 			@L.push 'R'
 	# Rotate current piece left if possible
-	rotL: => @rotR() for [1..3]
+	rotateLeft: => @rotateRight() for [1..3]
 	# Persist piece into the game state. This essentially makes it a static block instead of a moving piece
 	persist: (b,c)=>
 		@m[coord[1]][coord[0]]=c for coord in b
 	# Load highscore
-	gS:=>$.get '/H',(d)-> $("#h").text(d)
+	gS:=>$.get '/highscore',(d)-> $("#h").text(d)
 	# Game over handler
 	gameover: =>
 		@toggle()
-		$.post('/h',{n:$.trim(prompt("Name?")),d:JSON.stringify(@L)}).done => @gS()
+		$.post '/gameover',
+			name: $.trim(prompt("Please enter your name:"))
+			log: JSON.stringify(@L)
+		.done => @gS()
 		txt=@G.text(0.5*width*sz,2*sz,@score+"\ngame over\nhit ⏎")
 		txt.attr({"font-size":"30pt","font-family":"Courier"}) #STYLE_ONLY
 		@init()
@@ -237,10 +240,10 @@ class Game
 			txt.remove()
 			txt=null
 	# play a history and compute its score
-	run: (h) =>
+	run: (log) =>
 		p=0
-		a=JSON.parse(h["d"])
-		n=require('./js/n.js')
+		a=JSON.parse(log)
+		n=require('./js/nonsense.js')
 		@Q=new n(a.shift())
 		for i in a
 			if i[1]?
@@ -249,7 +252,7 @@ class Game
 				@persist(p.bounds(),p.color)
 				@draw()
 			else if i=="R"
-				p.rotR()
+				p.rotateRight()
 			else
 				i=@Q.uint32()%pieces.length;
 				p=new pieces[i]()
