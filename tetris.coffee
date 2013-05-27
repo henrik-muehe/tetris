@@ -116,7 +116,7 @@ class Game
 	init: =>
 		@n=-1
 		s=Math.random()
-		@L=[s]
+		@log=[s]
 		b.remove() for b in @blocks if @blocks
 		@score=0
 		@blocks=[]
@@ -148,7 +148,7 @@ class Game
 				@p.down()
 			else
 				@persist(@p.bounds(),@p.color);
-				@L.push [@p.xb,@p.yb]
+				@log.push [@p.xb,@p.yb]
 				@p.remove()
 				@draw()
 				@p=null
@@ -158,7 +158,7 @@ class Game
 			@p.xb=3 if @p?
 			if @p?
 				return @gameover() if !@check(@p)
-				@L.push @n
+				@log.push @n
 			@n=@Q.uint32()%pieces.length;
 			@next=new pieces[@n]()
 		# refresh game c
@@ -184,7 +184,7 @@ class Game
 		if @check(@p.clone().rotateRight())
 			@p.rotateRight()
 			@p.draw(@G)
-			@L.push 'R'
+			@log.push 'R'
 	# Rotate current piece left if possible
 	rotateLeft: => @rotateRight() for [1..3]
 	# Persist piece into the game state. This essentially makes it a static block instead of a moving piece
@@ -197,7 +197,7 @@ class Game
 		@toggle()
 		$.post '/gameover',
 			name: $.trim(prompt("Please enter your name:"))
-			log: JSON.stringify(@L)
+			log: JSON.stringify(@log)
 		.done => @gS()
 		txt=@G.text(0.5*width*sz,2*sz,@score+"\ngame over\nhit ⏎")
 		txt.attr({"font-size":"30pt","font-family":"Courier"}) #STYLE_ONLY
@@ -240,6 +240,14 @@ class Game
 			txt.remove()
 			txt=null
 	# play a history and compute its score
+	dump: =>
+		for y,row of @m
+			for x,c of row
+				if c?
+					process.stdout.write c[0]
+				else
+					process.stdout.write ' '
+			console.log ''
 	run: (log) =>
 		p=0
 		a=JSON.parse(log)
@@ -249,6 +257,11 @@ class Game
 			if i[1]?
 				p.xb=i[0]
 				p.yb=i[1]
+				if not @check(p)
+					console.log "<<<<<<< CHEATER DUMP"
+					@dump()
+					console.log "CHEATER DUMP >>>>>>>"
+					return -1
 				@persist(p.bounds(),p.color)
 				@draw()
 			else if i=="R"
