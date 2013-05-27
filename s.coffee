@@ -11,7 +11,7 @@ a.post '/h', (req, res)->
 	g=new t.Game()
 	s=g.run(b)
 	# Massive race condition ahead!
-	fs.appendFile('z.txt',s+"\t"+b.n+"\n")
+	fs.appendFileSync('z.txt',s+"\t"+b.n+"\n")
 	ex("sort -nr z.txt|head -n25>H")
 	res.send ''
 a.listen(3000);

@@ -155,6 +155,7 @@ class Game
 		if !@p?
 			# add piece if there is no active one
 			@p=@next
+			@p.xb=3 if @p?
 			if @p?
 				return @gameover() if !@check(@p)
 				@L.push @n
