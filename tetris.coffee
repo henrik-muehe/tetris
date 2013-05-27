@@ -243,7 +243,7 @@ class Game
 	run: (log) =>
 		p=0
 		a=JSON.parse(log)
-		n=require('./js/nonsense.js')
+		n=require('./libs/nonsense.js')
 		@Q=new n(a.shift())
 		for i in a
 			if i[1]?
