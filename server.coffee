@@ -21,6 +21,7 @@ app.post '/gameover', (req, res)->
 	seed=log[0]
 	if !openseeds[seed]? or new Date().getTime()-((+openseeds[seed])) > seed_timeout
 		res.send 403,'seed already used or server restart'
+	openseeds[seed]=0
 
 	# Reevaluate the game
 	score=(new tetris.Game()).run log
