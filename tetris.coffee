@@ -115,8 +115,6 @@ class Game
 	# Resets the game
 	init: =>
 		@n=-1
-		s=Math.random()
-		@log=[s]
 		b.remove() for b in @blocks if @blocks
 		@score=0
 		@blocks=[]
@@ -130,10 +128,16 @@ class Game
 			for col in [0..width-1]
 				@m[r][col]=null
 		if @G
-			@Q=new Nonsense(s)
-			@tick()
-			@draw()
-			@gS()
+			$.ajax
+				url: '/seed'
+				async: false
+				success: (data,status,xhr)=>
+					@log=[+data]
+					console.log @log
+					@Q=new Nonsense(@log[0])
+					@tick()
+					@draw()
+					@gS()
 	# Run a collision check for piece p
 	check: (p)=>
 		for b in p.bounds()
@@ -242,15 +246,17 @@ class Game
 	# play a history and compute its score
 	dump: =>
 		for y,row of @m
+			process.stdout.write '|'
 			for x,c of row
 				if c?
 					process.stdout.write c[0]
 				else
 					process.stdout.write ' '
-			console.log ''
+			console.log '|'
+		console.log '|++++++++++|'
 	run: (log) =>
 		p=0
-		a=JSON.parse(log)
+		a=log
 		n=require('./libs/nonsense.js')
 		@Q=new n(a.shift())
 		for i in a
